@@ -2,6 +2,9 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 
+import { remark } from "remark";
+import html from "remark-html";
+
 const postDirectroy = path.join(process.cwd(), "posts");
 
 export function getSortedPostsData() {
@@ -51,17 +54,26 @@ export function getAllPostIds() {
   return id;
 }
 
-export function getPostData(id) {
+export async function getPostData(id) {
   const fullPath = path.join(postDirectroy, `${id}.md`);
-  console.log(fullPath);
   const fileContents = fs.readFileSync(fullPath, "utf8");
 
   // use gray-matter to parse the post metadata section
   const matterResult = matter(fileContents);
 
+  //   console.log(matterResult);
+
+  // Use remark to convert markdown intp html string
+  const procesedContent = await remark()
+    .use(html)
+    .process(matterResult.content);
+
+  const contentHtml = procesedContent.toString();
+
   // combine the data and the id
   return {
     id,
+    contentHtml,
     ...matterResult.data,
   };
 }
